@@ -26,7 +26,7 @@
             display: block;
             touch-action: none;
         }
-        /* Elemen GIF dibiarkan terpisah agar animasinya berputar otomatis */
+        /* Menggunakan transisi halus agar animasi GIF di browser tidak ter-reset terus */
         #playerGif {
             position: absolute;
             width: 55px;
@@ -34,6 +34,7 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             object-fit: contain;
+            will-change: top, left;
         }
         #scoreText {
             font-size: 12px;
@@ -46,10 +47,7 @@
 <body>
 
     <div class="game-container">
-        <!-- Canvas untuk garis dan note -->
         <canvas id="gameCanvas" width="560" height="220"></canvas>
-        
-        <!-- GIF Karakter yang diposisikan melayang pas di atas canvas -->
         <img id="playerGif" src="lala.gif" alt="GIF Karakter">
     </div>
 
@@ -133,7 +131,6 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Garis Penerima (Hit Zone)
             ctx.strokeStyle = "#e74c3c";
             ctx.lineWidth = 3;
             ctx.setLineDash([5, 5]);
@@ -143,15 +140,14 @@
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Menggerakkan posisi GIF HTML secara real-time mengikuti koordinat player
             let rect = canvas.getBoundingClientRect();
             let scaleX = rect.width / canvas.width;
             let scaleY = rect.height / canvas.height;
 
+            // Update posisi GIF secara langsung
             playerGif.style.left = (player.x * scaleX) + "px";
             playerGif.style.top = (player.y * scaleY) + "px";
 
-            // Gambar Note berjalan
             if (note.active) {
                 ctx.fillStyle = "#2ecc71";
                 ctx.beginPath();
