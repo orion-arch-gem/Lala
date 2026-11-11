@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Touch Rhythm Game GIF Moving</title>
+    <title>Touch Rhythm Game Animation Frames</title>
     <style>
         body {
             background: #0f0f13;
@@ -14,27 +14,12 @@
             padding: 0;
             overflow: hidden;
         }
-        .game-container {
-            position: relative;
-            width: 560px;
-            height: 220px;
-            margin: 5px auto;
-        }
         canvas {
             background: #15151c;
             border: 2px solid #333;
             display: block;
+            margin: 5px auto;
             touch-action: none;
-        }
-        /* Menggunakan transisi halus agar animasi GIF di browser tidak ter-reset terus */
-        #playerGif {
-            position: absolute;
-            width: 55px;
-            height: 55px;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            object-fit: contain;
-            will-change: top, left;
         }
         #scoreText {
             font-size: 12px;
@@ -46,18 +31,13 @@
 </head>
 <body>
 
-    <div class="game-container">
-        <canvas id="gameCanvas" width="560" height="220"></canvas>
-        <img id="playerGif" src="lala.gif" alt="GIF Karakter">
-    </div>
-
-    <div id="scoreText">Skor: 0 | Status: Siap Geser!</div>
+    <canvas id="gameCanvas" width="560" height="220"></canvas>
+    <div id="scoreText">Skor: 0 | Status: Memuat Animasi...</div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreText = document.getElementById("scoreText");
-        const playerGif = document.getElementById("playerGif");
 
         let score = 0;
         let statusText = "Geser jempolmu ke atas/bawah!";
@@ -67,8 +47,37 @@
         let player = {
             x: targetX,
             y: 110,
-            size: 30
+            size: 45
         };
+
+        // --- SISTEM PEMUTAR ANIMASI FRAME (23 FRAME) ---
+        const totalFrames = 23; 
+        let frames = [];
+        let currentFrameIndex = 0;
+        let framesLoadedCount = 0;
+
+        for (let i = 0; i < totalFrames; i++) {
+            let img = new Image();
+            // Menyesuaikan penamaan otomatis dari ezgif (frame_00, frame_01, dst.)
+            let numStr = i < 10 ? "0" + i : i;
+            img.src = `frame_${numStr}_delay-0.07s.gif`; 
+            
+            img.onload = function() {
+                framesLoadedCount++;
+                if (framesLoadedCount === totalFrames) {
+                    statusText = "Geser terus...";
+                }
+            };
+            frames.push(img);
+        }
+
+        // Kecepatan putar animasi frame
+        setInterval(() => {
+            if (frames.length > 0) {
+                currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
+            }
+        }, 70);
+        // -----------------------------------
 
         let note = {
             x: -20,
@@ -131,6 +140,7 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Garis Penerima (Hit Zone)
             ctx.strokeStyle = "#e74c3c";
             ctx.lineWidth = 3;
             ctx.setLineDash([5, 5]);
@@ -140,14 +150,18 @@
             ctx.stroke();
             ctx.setLineDash([]);
 
-            let rect = canvas.getBoundingClientRect();
-            let scaleX = rect.width / canvas.width;
-            let scaleY = rect.height / canvas.height;
+            // Gambar animasi frame secara bergantian di canvas
+            if (frames.length > 0 && frames[currentFrameIndex].complete) {
+                ctx.drawImage(
+                    frames[currentFrameIndex], 
+                    player.x - player.size/2, 
+                    player.y - player.size/2, 
+                    player.size, 
+                    player.size
+                );
+            }
 
-            // Update posisi GIF secara langsung
-            playerGif.style.left = (player.x * scaleX) + "px";
-            playerGif.style.top = (player.y * scaleY) + "px";
-
+            // Gambar Note berjalan
             if (note.active) {
                 ctx.fillStyle = "#2ecc71";
                 ctx.beginPath();
