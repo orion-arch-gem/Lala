@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Touch Rhythm Game Canvas GIF</title>
+    <title>Touch Rhythm Game GIF Moving</title>
     <style>
         body {
             background: #0f0f13;
@@ -14,12 +14,26 @@
             padding: 0;
             overflow: hidden;
         }
+        .game-container {
+            position: relative;
+            width: 560px;
+            height: 220px;
+            margin: 5px auto;
+        }
         canvas {
             background: #15151c;
             border: 2px solid #333;
             display: block;
-            margin: 5px auto;
             touch-action: none;
+        }
+        /* Elemen GIF dibiarkan terpisah agar animasinya berputar otomatis */
+        #playerGif {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            object-fit: contain;
         }
         #scoreText {
             font-size: 12px;
@@ -31,13 +45,21 @@
 </head>
 <body>
 
-    <canvas id="gameCanvas" width="560" height="220"></canvas>
-    <div id="scoreText">Skor: 0 | Status: Memuat Gambar...</div>
+    <div class="game-container">
+        <!-- Canvas untuk garis dan note -->
+        <canvas id="gameCanvas" width="560" height="220"></canvas>
+        
+        <!-- GIF Karakter yang diposisikan melayang pas di atas canvas -->
+        <img id="playerGif" src="lala.gif" alt="GIF Karakter">
+    </div>
+
+    <div id="scoreText">Skor: 0 | Status: Siap Geser!</div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreText = document.getElementById("scoreText");
+        const playerGif = document.getElementById("playerGif");
 
         let score = 0;
         let statusText = "Geser jempolmu ke atas/bawah!";
@@ -47,17 +69,7 @@
         let player = {
             x: targetX,
             y: 110,
-            size: 45 // Ukuran karakter di canvas
-        };
-
-        // Load file lala.gif langsung via objek gambar JavaScript
-        let playerImg = new Image();
-        playerImg.src = "lala.gif";
-        
-        let imgLoaded = false;
-        playerImg.onload = function() {
-            imgLoaded = true;
-            statusText = "Geser terus...";
+            size: 30
         };
 
         let note = {
@@ -131,20 +143,13 @@
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Gambar Karakter (lala.gif) langsung di dalam Canvas
-            if (imgLoaded) {
-                ctx.drawImage(
-                    playerImg, 
-                    player.x - player.size/2, 
-                    player.y - player.size/2, 
-                    player.size, 
-                    player.size
-                );
-            } else {
-                // Cadangan kalau gambar belum termuat: gambar kotak biru sementara
-                ctx.fillStyle = "#3498db";
-                ctx.fillRect(player.x - 15, player.y - 15, 30, 30);
-            }
+            // Menggerakkan posisi GIF HTML secara real-time mengikuti koordinat player
+            let rect = canvas.getBoundingClientRect();
+            let scaleX = rect.width / canvas.width;
+            let scaleY = rect.height / canvas.height;
+
+            playerGif.style.left = (player.x * scaleX) + "px";
+            playerGif.style.top = (player.y * scaleY) + "px";
 
             // Gambar Note berjalan
             if (note.active) {
